@@ -1,0 +1,20 @@
+{
+  "name": "ninokuni-line-bot",
+  "version": "1.0.0",
+  "description": "Line Robot for NiNoKuni Activity Alarm",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": {
+    "name": "Robin WU",
+    "email": "w60292@gmail.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@line/bot-sdk": "^7.5.0",
+    "cron": "^2.0.0",
+    "express": "^4.18.1",
+    "uuid": "^8.3.2"
+  }
+}
