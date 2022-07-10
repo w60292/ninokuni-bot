@@ -1,32 +1,30 @@
-'use strict';
-
-(function () {
+(function LINEBOT() {
   const express = require('express');
   const line = require('@line/bot-sdk');
-  const cronJob = require('cron').CronJob;
   const mysql = require('mysql');
+  const { CronJob } = require('cron');
   const { v4: uuid } = require('uuid');
 
-  const loader = require('./src/json-loader.js');
-  const { msgPrefix } = require('./src/constant.js');
+  const { msgPrefix } = require('./src/constant');
+  const loader = require('./src/json-loader');
 
   /**
    * Variables
    */
-  const config = loader.loadConfig();                   // Read config from the json files
-  const client = new line.Client(config.lineChannel);   // Setup Line message channel
+  const config = loader.loadConfig(); // Read config from the json files
+  const client = new line.Client(config.lineChannel); // Setup Line message channel
 
   /**
    * Methods
    */
   const queryMysql = (sql) => {
     const connection = mysql.createConnection(config.mysql);
-    
-    return new Promise(async (resolve, reject) => {
-      let err = await connection.connect();
 
-      if (err) {
-        reject(err)
+    return new Promise(async (resolve, reject) => {
+      const connErr = await connection.connect();
+
+      if (connErr) {
+        reject(connErr);
       } else {
         connection.query(sql, (err, rows) => {
           if (err) {
@@ -42,25 +40,25 @@
 
   /**
    *  [
-   *    { cron: "0 0 10 * * *", text: "line test messgae" }, 
+   *    { cron: "0 0 10 * * *", text: "line test messgae" },
    *    ...
    *  ]
-   **/
+   */
   const fetchCronJobs = async () => {
     const timezoneOffsetInHours = new Date().getTimezoneOffset() / 60;
     const sql = 'SELECT * FROM ninokuni.push_jobs WHERE enabled = 1';
     const result = await queryMysql(sql);
 
-    return result.map(job => {
+    return result.map((job) => {
       const { cron, message: text } = job;
       const pattern = cron.split(' ');
       const hourString = pattern[2];
       const hours = hourString.split(',');
-      
-      pattern[2] = hours.map(h => parseInt(h, 10) - timezoneOffsetInHours).join(',');
-      return { 
-        cron: pattern.join(' '), 
-        text 
+
+      pattern[2] = hours.map((h) => parseInt(h, 10) - timezoneOffsetInHours).join(',');
+      return {
+        cron: pattern.join(' '),
+        text,
       };
     });
   };
@@ -75,15 +73,15 @@
   };
 
   const createPushJobs = (cronJobs) => {
-    cronJobs.forEach(obj => {
+    cronJobs.forEach((obj) => {
       const { cron, text } = obj;
-      new cronJob(cron, function () {
+      new CronJob(cron, (() => {
         const msg = `${msgPrefix}${text}`;
-        const now = new Date() + "";
-        
+        const now = `${new Date()}`;
+
         client.pushMessage(
           config.lineGroup.id,
-          { type: 'text', text: msg }
+          { type: 'text', text: msg },
         )
           .then(() => {
             console.log(`${now}: ${msg}`);
@@ -91,7 +89,7 @@
           .catch((err) => {
             console.error(err);
           });
-      }).start();
+      })).start();
     });
   };
 
