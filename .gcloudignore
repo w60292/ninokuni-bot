@@ -15,3 +15,6 @@
 
 # Node.js dependencies:
 node_modules/
+# Files I do not want to deploy
+resources/
+conf.template.json

@@ -1,0 +1,16 @@
+{
+  "lineChannel": {
+    "channelId": "Your LINE Message Channel ID, you can apply the message channel service via https://developers.line.biz/en/ first",
+    "channelSecret": "Your LINE Message Channel Secret",
+    "channelAccessToken": "Your LINE Message Channel Access Token"
+  },
+  "lineGroup": {
+    "id": "An ID of the LINE group where you'd like to push messages to."
+  },
+  "mysql": {
+    "host": "IP address of your MySQL server.",
+    "user": "Your MySQL username",
+    "password": "Your MySQL password",
+    "database": "Your MySQL database name"
+  }
+}
