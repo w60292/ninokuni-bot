@@ -48,19 +48,37 @@
     const timezoneOffsetInHours = new Date().getTimezoneOffset() / 60;
     const sql = 'SELECT * FROM ninokuni.push_jobs WHERE enabled = 1';
     const result = await queryMysql(sql);
+    const name = await whosTurn(0);  
 
     return result.map((job) => {
-      const { cron, message: text } = job;
+      const { id, cron, message } = job;
       const pattern = cron.split(' ');
       const hourString = pattern[2];
       const hours = hourString.split(',');
+      let text = message;
 
       pattern[2] = hours.map((h) => parseInt(h, 10) - timezoneOffsetInHours).join(',');
+      
+      if (id === 4 || id === 5) {
+        text = text.split('$var').join(name);
+      }
       return {
         cron: pattern.join(' '),
         text,
       };
     });
+  };
+
+  // bookId: 0 [綠木增幅 & 火焰增幅]
+  // bookId: 1 [逆轉]
+  const fetchQueue = (bookId) => {
+    const sql = `SELECT * FROM ninokuni.magic_book_queue as queue where queue.magic_book_id = ${bookId} order by queue.order`;
+    return queryMysql(sql);
+  };
+
+  const whosTurn = (bookId) => {
+    const sql = `SELECT * FROM ninokuni.magic_book_queue as queue where queue.magic_book_id = ${bookId} and queue.is_your_turn is true`;
+    return queryMysql(sql).then(result => result[0]['display_name']);
   };
 
   // Got event from line
@@ -102,6 +120,17 @@
         .status(200)
         .send(`Hello, ${uuid()}!`)
         .end();
+    });
+    app.get('/api/getQueueByBookId', async (req, res) => {
+      const { bookId } = req.query;
+      let result = null;
+
+      if (!bookId) {
+        res.status(400).json({ error: 'There is no bookId!' });
+        return;
+      }
+      result = await fetchQueue(bookId);
+      res.status(200).json(result);
     });
     app.post('/linewebhook', line.middleware(config.lineChannel), (req, res) => {
       Promise
